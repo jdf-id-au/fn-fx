@@ -77,12 +77,14 @@
 (defn -main []
   (let [;; Data State holds the business logic of our app
         data-state (atom {:authed? false})
+        quit? (promise)
 
         ;; handler-fn handles events from the ui and updates the data state
         handler-fn (fn [{:keys [event] :as all-data}]
                      (println "UI Event" event all-data)
                      (case event
                        :auth (swap! data-state assoc :authed? true)
+                       :quit (deliver quit? true)
                        (println "Unknown UI event" event all-data)))
 
         ;; ui-state holds the most recent state of the ui
@@ -92,7 +94,8 @@
     (add-watch data-state :ui (fn [_ _ _ _]
                                 (send ui-state
                                       (fn [old-ui]
-                                        (dom/update-app old-ui (stage @data-state))))))))
+                                        (dom/update-app old-ui (stage @data-state))))))
+    (deref quit?)))
 
 (comment
   (-main)
